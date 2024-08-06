@@ -159,6 +159,17 @@ func (m *MongoStore) MaxAge(age int) {
 	}
 }
 
+// MaxLength restricts the maximum length of new sessions to l.
+// If l is 0 there is no limit to the size of a session, use with caution.
+// The default for a new Store is 4096.
+func (m *MongoStore) MaxLength(l int) {
+	for _, c := range m.Codecs {
+		if codec, ok := c.(*securecookie.SecureCookie); ok {
+			codec.MaxLength(l)
+		}
+	}
+}
+
 func (m *MongoStore) load(session *sessions.Session) error {
 	s := Session{}
 	err := m.coll.FindOne(context.TODO(), makeFilterByID(session.ID)).Decode(&s)
