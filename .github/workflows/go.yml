@@ -54,7 +54,7 @@ jobs:
           mongodb-db: test
           mongodb-version: ${{ matrix.mongodb-version }}
 
-      - uses: actions/cache@v4.0.2
+      - uses: actions/cache@v4.2.3
         with:
           path: |
             ${{ matrix.go-build }}
