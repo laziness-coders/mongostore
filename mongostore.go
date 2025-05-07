@@ -15,9 +15,9 @@ import (
 
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 var ErrInvalidId = errors.New("mgostore: invalid session id")
@@ -57,16 +57,10 @@ func NewMongoStore(c *mongo.Collection, maxAge int, ensureTTL bool,
 	store.MaxAge(maxAge)
 
 	if ensureTTL {
-		background := true
-		sparse := true
 		expireAfter := int32(maxAge)
 		_, err := c.Indexes().CreateOne(context.Background(), mongo.IndexModel{
-			Keys: bson.M{"modified": 1},
-			Options: &options.IndexOptions{
-				Background:         &background,
-				Sparse:             &sparse,
-				ExpireAfterSeconds: &expireAfter,
-			},
+			Keys:    bson.M{"modified": 1},
+			Options: options.Index().SetSparse(true).SetExpireAfterSeconds(expireAfter),
 		})
 		if err != nil {
 			panic(err)
@@ -203,7 +197,7 @@ func (m *MongoStore) upsert(session *sessions.Session) error {
 		Modified: modified,
 	}
 
-	updateOption := options.Update().SetUpsert(true)
+	updateOption := options.UpdateOne().SetUpsert(true)
 	updateData := bson.M{"$set": s}
 	_, err = m.coll.UpdateByID(context.TODO(), s.Id, updateData, updateOption)
 	if err != nil {
